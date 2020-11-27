@@ -28,7 +28,10 @@
                             <td>{{ $i }}</td>
                             <td>{{ $item->name }}</td>
                             <td>{{ $item->info }}</td>
-                            <td><a href="{{ route('showform.index', ['id'=>$item->id]) }}"><button class="btn btn-primary"> Show </button></a></td>
+                            <td>
+                                <a href="{{ route('showform.show', $item->id) }}"><button class="btn btn-primary"> Open </button></a>
+                                <a href="{{ route('showform.index', ['id' => $item->id]) }}"><button class="btn btn-primary"> Show </button></a>
+                            </td>
                         </tr>
                         <?php $i++ ?>
                     @endforeach

@@ -18,3 +18,5 @@ Route::get('/', function () {
 Route::resource('form', 'FormController');
 
 Route::resource('showform', 'FormDetailController');
+
+Route::resource('formdata', 'FormDataController');

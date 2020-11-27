@@ -81,12 +81,12 @@
 
             <div class="content">
                 <div class="title m-b-md">
-                    Laravel
+                    Form Generator
                 </div>
 
                 <div class="links">
-                    <a href="{{ route('form.index') }}">Form</a>
-                    <a href="{{ route('form.create') }}">Form</a>
+                    <a href="{{ route('form.index') }}">Form List</a>
+                    <a href="{{ route('form.create') }}">Form Create</a>
                 </div>
             </div>
         </div>

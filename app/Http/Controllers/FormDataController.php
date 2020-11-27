@@ -2,26 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Form;
+use App\Models\FormData;
 use App\Models\FormDetail;
 use App\Models\FieldValue;
-use App\Models\FormData;
-use Illuminate\Http\Request;
 
-class FormDetailController extends Controller
+class FormDataController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index()
     {
-        $id = $request->id;
-        $formData = FormData::where('form_id', $id)->get();
-
-        return view('formDetails.index',compact('formData'));
-
+        //
     }
 
     /**
@@ -42,48 +38,42 @@ class FormDetailController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->all();
-        $id = $data['form_id'];
-
-        unset($data['_token'],$data['form_id']);
-        $data = serialize($data);
-
-        date_default_timezone_set('Asia/Kolkata');
-        $dt=date("Y-m-d H:i:s");
-
-        $formData = new FormData;
-        $formData->form_id = $id;
-        $formData->name = $dt;
-        $formData->data = $data;
-        $formData->save();
-
-        return redirect('form');
+        //
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int $id
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
-        $form = Form::where('id', $id)->first();
-        $formDetail = FormDetail::where('form_id', $id)->get();
-        $html = '<form action="'.route('showform.store').'" method="POST"> '. csrf_field() ;
-        $html .= '<input type="hidden" name="form_id" value="'.$id.'">';
+        $data = FormData::where('id',$id)->first();
+
+        $form_id = $data->form_id;
+
+        $data = unserialize($data->data);
+
+        $form = Form::where('id', $form_id)->first();
+        $formDetail = FormDetail::where('form_id', $form_id)->get();
+        $html = '';
         foreach($formDetail as $item){
             if($item->field_type == "textarea"){
                 $html .= '<div class="form-group"><label for="'.$item->field_name.'">'.$item->field_label.'</label>';
-                $html .= '<textarea class="form-control" name="'.$item->field_name.'" id="'.$item->field_name.'"></textarea></div>';
+                $html .= '<textarea class="form-control" name="'.$item->field_name.'" id="'.$item->field_name.'" readonly>'. $data[$item->field_name] .'</textarea></div>';
             }
             else if($item->field_type == "select"){
                 $html .= '<div class="form-group"><label for="'.$item->field_name.'">'.$item->field_label.'</label>';
-                $html .= '<select name="'.$item->field_name.'" id="'.$item->field_name.'" class="form-control">';
+                $html .= '<select name="'.$item->field_name.'" id="'.$item->field_name.'" class="form-control"  readonly>';
                 $FieldValue = FieldValue::where('form_details_id', $item->id)->get();
 
                 foreach($FieldValue as $value){
-                    $html .= '<option value="'.$value->field_value.'">'.$value->field_label.'</option>';
+                    $html .= '<option value="'.$value->field_value.'" ';
+                    if ($data[$item->field_name] == $value->field_value){
+                        $html .= 'selected';
+                    }
+                    $html .= '>'.$value->field_label.'</option>';
                 }
                 $html .= '</select></div>';
             }
@@ -93,34 +83,42 @@ class FormDetailController extends Controller
 
                 foreach ($FieldValue as $value) {
                     $html .= '<div class="form-check">';
-                    $html .= '<input class="form-check-input" type="radio" name="'.$item->field_name.'" id="'.$item->field_name.'" value="'.$value->field_value.'">';
+                    $html .= '<input class="form-check-input" type="radio" name="'.$item->field_name.'" id="'.$item->field_name.'" value="'.$value->field_value.'"';
+                    if (isset($data[$item->field_name]) && $data[$item->field_name] == $value->field_value){
+                        $html .= 'checked';
+                    } else {
+                        $html .= 'disabled';
+                    }
+                    $html .= ' readonly>';
                     $html .= '<label class="form-check-label" for="'.$value->field_value.'"> '.$value->field_label.' </label></div>';
                 }
 
             }
             else if($item->field_type == "checkbox"){
                 $html .= '<div class="form-group">';
-                $html .= '<input type="'.$item->field_type.'" id="'.$item->field_name.'" name="'.$item->field_name.'" class="form-check-input ml-1">';
+                $html .= '<input type="'.$item->field_type.'" id="'.$item->field_name.'" name="'.$item->field_name.'" class="form-check-input ml-1"  readonly';
+                if(isset($data[$item->field_name]) && $data[$item->field_name] == 'on'){
+                    $html .= ' checked';
+                }
+                $html .= '>';
                 $html .= '<label class="form-check-label ml-4" for="'.$item->field_name.'">'.$item->field_label.'</label></div>';
             }
             else {
                 $html .= '<div class="form-group"><label for="'.$item->field_name.'">'.$item->field_label.'</label>';
-                $html .= '<input type="'.$item->field_type.'" name="'.$item->field_name.'" id="'.$item->field_name.'" class="form-control"></div>';
+                $html .= '<input type="'.$item->field_type.'" name="'.$item->field_name.'" id="'.$item->field_name.'" value="'.$data[$item->field_name].'" class="form-control" readonly></div>';
             }
         }
-        $html .= '<div class="row"><button class="btn btn-primary offset-1 col-3">Submit</button></div>';
-        $html .= '</form>';
 
-        return view('formDetails.show',compact('form', 'html'));
+        return view('formdata.show',compact('form', 'html'));
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\FormDetail  $formDetail
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(FormDetail $formDetail)
+    public function edit($id)
     {
         //
     }
@@ -129,10 +127,10 @@ class FormDetailController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\FormDetail  $formDetail
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, FormDetail $formDetail)
+    public function update(Request $request, $id)
     {
         //
     }
@@ -140,10 +138,10 @@ class FormDetailController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\FormDetail  $formDetail
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(FormDetail $formDetail)
+    public function destroy($id)
     {
         //
     }
